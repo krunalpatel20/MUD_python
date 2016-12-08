@@ -6,13 +6,41 @@
 import random
 from includes.Builder import Builder
 from includes.Room import Room
-from includes.Database import Database
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Boolean
 
 class User:
     user = None
     MAX_WIDTH = 3
     MAX_LENGTH = 3
     MAX_HEIGHT = 3
+
+    engine = create_engine('mysql://root:root@localhost:3306/dungeon', echo=False)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+
+    Base = declarative_base()
+    class UserTable(Base):
+        __tablename__='user'
+
+        id = Column(Integer, primary_key=True)
+        username = Column(String(45), nullable=False)
+        password = Column(String(45), nullable=True)
+        logged_in = Column(Boolean, nullable=False)
+        room_coord = Column(String(10), nullable=False)
+
+        def __init__(self, username, password, logged_in, room_coord):
+            self.username = username
+            self.password = password
+            self.logged_in = logged_in
+            self.room_coord = room_coord
+
+        def __repr__(self):
+            return "<UserTable(%s, %s)>" %(self.username, self.room_coord)
+
 
     def __init__(self):
         self.username = ''
