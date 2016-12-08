@@ -11,36 +11,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean
 
+from includes.User import UserTable
+
+
 class User:
     user = None
     MAX_WIDTH = 3
     MAX_LENGTH = 3
     MAX_HEIGHT = 3
-
-    engine = create_engine('mysql://root:root@localhost:3306/dungeon', echo=False)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-
-    Base = declarative_base()
-    class UserTable(Base):
-        __tablename__='user'
-
-        id = Column(Integer, primary_key=True)
-        username = Column(String(45), nullable=False)
-        password = Column(String(45), nullable=True)
-        logged_in = Column(Boolean, nullable=False)
-        room_coord = Column(String(10), nullable=False)
-
-        def __init__(self, username, password, logged_in, room_coord):
-            self.username = username
-            self.password = password
-            self.logged_in = logged_in
-            self.room_coord = room_coord
-
-        def __repr__(self):
-            return "<UserTable(%s, %s)>" %(self.username, self.room_coord)
-
 
     def __init__(self):
         self.username = ''
@@ -84,19 +62,95 @@ class User:
         return self.currRoom
 
     def getUser(self, username):
-        db = Database.getInstance()
-        sql = 'SELECT * FROM users WHERE username = \'' + username + '\''
-        db.ExecQuery(sql)
-        user = db.getAssoc()
-        self.username = user[0]
-        self.password = user[1]
+        record = session.query(UserTable).filter_by(username=username).first()
+        self.username = record.username
+        self.password = record.password
+        room_coord = record.room_coord
+        if(len(room_coord) < 3):
+            x = 0
+            y = room_coord[0]
+            z = room_coord[1]
+        else:
+            x = room_coord[0]
+            y = room_coord[1]
+            z = room_coord[2]
 
-        #TODO do the rest of the stuff
+        builder = Builder()
+        builder.setX(x)
+        builder.setY(y)
+        builder.setZ(z)
+        self.currRoom = builder.buildRoom()
+        return record
+
 
     def insertUser(self, username, password):
-        db = Database.getInstance()
-        sql = "INSERT INTO users (username, password, logged_in) VALUES ('" + username + "', '" + password + "', 1)"
-        db.ExecQuery(sql)
-        self.setUsername(username)
+        new_record = UserTable(username, password, True, '')
+        session.add(new_record)
+        session.commit()
+
+    def updateLogin(self, login):
+        record = User.session.query(UserTable).filter_by(username=self.username).first()
+        record.logged_in = login
+        session.add(record)
+        session.commit()
+
+    def reset(self):
+        self.username = None
+        self.password = None
+
+    def checkPassword(self,password):
+        return self.password == password
+
+    def getUsersRoom(self):
+        x = self.currRoom.getX()
+        y = self.currRoom.getY()
+        z = self.currRoom.getZ()
+        coord = x + "" + y + "" + z
+
+        records = session.query(UserTable).filter_by(room_coord=coord)
+        users = []
+        for record in records:
+            users.append(record.username)
+
+        return users
+
+    def updateRoom(self):
+        if self.username == None or self.username == '':
+            return False
+        x = self.currRoom.getX()
+        y = self.currRoom.getY()
+        z = self.currRoom.getZ()
+        coord = x + "" + y + "" + z
+        record = session.query(UserTable).filter_by(username=self.username).first()
+        record.room_coord = coord
+        session.add(record)
+        session.commit()
+
+#
+# The User SQL Model
+#
+engine = create_engine('mysql://root:root@localhost:3306/dungeon', echo=False)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+Base = declarative_base()
+
+class UserTable(Base):
+    __tablename__ = 'user'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(45), nullable=False)
+    password = Column(String(45), nullable=True)
+    logged_in = Column(Boolean, nullable=False)
+    room_coord = Column(String(10), nullable=False)
+
+    def __init__(self, username, password, logged_in, room_coord):
+        self.username = username
+        self.password = password
+        self.logged_in = logged_in
+        self.room_coord = room_coord
+
+    def __repr__(self):
+        return "<UserTable(%s, %s)>" % (self.username, self.room_coord)
 
 
