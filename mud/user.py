@@ -4,14 +4,14 @@
 #
 
 import random
-from includes.Builder import Builder
-from includes.Room import Room
+from mud.builder import Builder
+from mud.room import Room
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Boolean
 
-from includes.User import UserTable
+from mud.user import UserTable
 
 
 class User:

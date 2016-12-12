@@ -2,7 +2,7 @@
 # Krunal Patel
 # Builder class to build a room
 #
-from includes.Room import Room
+from mud.room import Room
 
 class Builder:
     def __init__(self):
