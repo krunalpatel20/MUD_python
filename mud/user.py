@@ -26,7 +26,7 @@ class User:
         self.password = ''
 
     def getInstance(self):
-        if User.user == None:
+        if User.user is None:
             User.user = User()
 
         return User.user
@@ -80,6 +80,10 @@ class User:
         builder.setY(y)
         builder.setZ(z)
         self.currRoom = builder.buildRoom()
+        return record
+
+    def getOtherUser(self, username):
+        record = session.query(UserTable).filter_by(username=username).first()
         return record
 
 
