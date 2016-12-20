@@ -21,6 +21,6 @@ class Builder:
         self.z = z
 
     def buildRoom(self):
-        self.transparency = Room.checkOpacity(self.x,self.y,self.z)
+        self.transparency = Room.checkOpacity(self.x, self.y, self.z)
         room = Room(self.x, self.y, self.z)
         return room
